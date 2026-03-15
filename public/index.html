@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Quality — Open Primitive</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface2: #161922;
+      --border: #1e2330;
+      --accent: #6366f1;
+      --accent-dim: rgba(99,102,241,0.12);
+      --text: #e2e4ea;
+      --text-muted: #6b7280;
+      --text-dim: #9ca3af;
+      --green: #22c55e;
+      --green-bg: rgba(34,197,94,0.1);
+      --red: #ef4444;
+      --red-bg: rgba(239,68,68,0.1);
+      --gray: #6b7280;
+      --gray-bg: rgba(107,114,128,0.1);
+      --star-on: #f59e0b;
+      --star-off: #2a2e3d;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding: 2rem 1.5rem 1.75rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .header-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 0.6rem;
+    }
+
+    .header .tagline {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .header .sub {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    /* Main */
+    .main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem 4rem;
+    }
+
+    /* Search */
+    .search-wrap {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .search-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 0.65rem 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus { border-color: var(--accent); }
+
+    .search-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.65rem 1.25rem;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .search-btn:hover { opacity: 0.85; }
+    .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .spinner.visible { display: flex; }
+
+    .spinner-ring {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-msg {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+      color: var(--red);
+      font-size: 0.88rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .error-msg.visible { display: block; }
+
+    /* No results */
+    .no-results {
+      display: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 1rem 0;
+    }
+    .no-results.visible { display: block; }
+
+    /* Results list */
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .result-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .result-item:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+
+    .result-item.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .result-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .result-location {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    .result-stars {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      letter-spacing: 1px;
+    }
+
+    /* Hospital detail panel */
+    .hospital-panel {
+      display: none;
+    }
+    .hospital-panel.visible { display: block; }
+
+    .panel-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      margin-bottom: 0.25rem;
+    }
+
+    .panel-meta {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .panel-rating {
+      margin: 1rem 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .panel-stars {
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+    }
+
+    .panel-rating-label {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    .panel-rating-num {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    /* Section */
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    /* Quality cards */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .quality-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .quality-card.better {
+      border-color: rgba(34,197,94,0.25);
+      background: var(--green-bg);
+    }
+
+    .quality-card.worse {
+      border-color: rgba(239,68,68,0.25);
+      background: var(--red-bg);
+    }
+
+    .quality-card.same {
+      border-color: var(--border);
+      background: var(--surface);
+    }
+
+    .card-measure {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      line-height: 1.4;
+    }
+
+    .card-score {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+
+    .card-comparison {
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .card-comparison.better { color: var(--green); }
+    .card-comparison.worse { color: var(--red); }
+    .card-comparison.same { color: var(--gray); }
+
+    /* No data note */
+    .no-data {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+      padding: 0.5rem 0;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-top: 3rem;
+      padding: 1.5rem 1.5rem;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.8;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .footer-note {
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 520px) {
+      .header, .main { padding-left: 1rem; padding-right: 1rem; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .search-btn { padding: 0.65rem 0.9rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-label">Open Primitive</div>
+  <h1>Hospital Quality</h1>
+  <p class="tagline">What CMS knows about the hospital you're considering.</p>
+  <p class="sub">Every hospital that accepts Medicare reports quality data to CMS. This shows you what they filed.</p>
+</header>
+
+<main class="main">
+  <div class="search-wrap">
+    <input
+      class="search-input"
+      id="searchInput"
+      type="text"
+      placeholder="Hospital name or zip code"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button class="search-btn" id="searchBtn">Search</button>
+  </div>
+
+  <div class="spinner" id="spinner">
+    <div class="spinner-ring"></div>
+    <span id="spinnerText">Searching...</span>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+  <div class="no-results" id="noResults">No hospitals found. Try a different name or zip code.</div>
+
+  <div class="results-list" id="resultsList"></div>
+
+  <div class="hospital-panel" id="hospitalPanel">
+    <div class="panel-header">
+      <div class="panel-name" id="panelName"></div>
+      <div class="panel-meta" id="panelMeta"></div>
+      <div class="panel-rating" id="panelRating"></div>
+    </div>
+
+    <div class="section" id="mortalitySection">
+      <div class="section-title">Mortality</div>
+      <div class="cards-grid" id="mortalityCards"></div>
+    </div>
+
+    <div class="section" id="readmissionsSection">
+      <div class="section-title">Readmissions</div>
+      <div class="cards-grid" id="readmissionsCards"></div>
+    </div>
+
+    <div class="section" id="experienceSection">
+      <div class="section-title">Patient Experience</div>
+      <div class="cards-grid" id="experienceCards"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Data: <a href="https://data.cms.gov" target="_blank" rel="noopener">CMS Care Compare</a> &middot; data.cms.gov &middot; Updated monthly
+  <div class="footer-note">Star ratings are CMS composite scores. They reflect reported outcomes, not our assessment.</div>
+</footer>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const spinner = document.getElementById('spinner');
+  const spinnerText = document.getElementById('spinnerText');
+  const errorMsg = document.getElementById('errorMsg');
+  const noResults = document.getElementById('noResults');
+  const resultsList = document.getElementById('resultsList');
+  const hospitalPanel = document.getElementById('hospitalPanel');
+
+  let selectedProviderId = null;
+
+  function showSpinner(text) {
+    spinnerText.textContent = text || 'Loading...';
+    spinner.classList.add('visible');
+  }
+  function hideSpinner() { spinner.classList.remove('visible'); }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('visible');
+  }
+  function hideError() { errorMsg.classList.remove('visible'); }
+
+  function renderStars(rating) {
+    const n = parseInt(rating, 10);
+    if (!n || n < 1 || n > 5) return '';
+    let s = '';
+    for (let i = 1; i <= 5; i++) {
+      s += `<span style="color:${i <= n ? 'var(--star-on)' : 'var(--star-off)'}">${i <= n ? '&#9733;' : '&#9733;'}</span>`;
+    }
+    return s;
+  }
+
+  function renderStarsText(rating) {
+    const n = parseInt(rating, 10);
+    if (!n || n < 1 || n > 5) return '<span style="color:var(--text-muted)">No rating</span>';
+    let s = '';
+    for (let i = 1; i <= 5; i++) {
+      s += `<span style="color:${i <= n ? 'var(--star-on)' : 'var(--star-off)'}">\u2605</span>`;
+    }
+    return s;
+  }
+
+  function comparisonLabel(c) {
+    if (c === 'better') return 'Better than national average';
+    if (c === 'worse') return 'Worse than national average';
+    if (c === 'same') return 'Same as national average';
+    return null;
+  }
+
+  function renderQualityCard(measure) {
+    const cls = measure.comparison || 'same';
+    const label = comparisonLabel(measure.comparison);
+    const score = measure.score !== null && measure.score !== undefined && measure.score !== '' && measure.score !== 'N/A'
+      ? measure.score
+      : null;
+    return `
+      <div class="quality-card ${cls}">
+        <div class="card-measure">${escHtml(measure.measure_name || measure.measure_id || 'Measure')}</div>
+        ${score !== null ? `<div class="card-score">${escHtml(String(score))}</div>` : '<div class="card-score" style="color:var(--text-muted);font-size:0.9rem">Not reported</div>'}
+        ${label ? `<div class="card-comparison ${cls}">${label}</div>` : ''}
+      </div>
+    `;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function renderSection(containerId, measures, rawFallback) {
+    const el = document.getElementById(containerId);
+
+    // Try primary measures first
+    let toRender = measures && measures.length ? measures : null;
+
+    // Fallback: use raw data
+    if (!toRender && rawFallback && rawFallback.length) {
+      toRender = rawFallback.map(m => ({
+        measure_id: m.measure_id || m.hcahps_measure_id,
+        measure_name: m.measure_name || m.hcahps_question || m.measure_id,
+        score: m.score || m.hcahps_answer_percent || m.patient_survey_star_rating,
+        comparison: normalizeComparison(m.compared_to_national || m.comparison || m.patient_survey_star_rating_footnote)
+      })).filter(m => m.measure_name);
+    }
+
+    if (!toRender || !toRender.length) {
+      el.innerHTML = '<div class="no-data">No data available for this hospital.</div>';
+      return;
+    }
+
+    el.innerHTML = toRender.map(renderQualityCard).join('');
+  }
+
+  function normalizeComparison(val) {
+    if (!val) return null;
+    const v = String(val).toLowerCase();
+    if (v.includes('better')) return 'better';
+    if (v.includes('worse')) return 'worse';
+    if (v.includes('same') || v.includes('no different')) return 'same';
+    return null;
+  }
+
+  async function doSearch() {
+    const q = searchInput.value.trim();
+    if (!q) return;
+
+    hideError();
+    noResults.classList.remove('visible');
+    resultsList.innerHTML = '';
+    hospitalPanel.classList.remove('visible');
+    selectedProviderId = null;
+    searchBtn.disabled = true;
+    showSpinner('Searching...');
+
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Search failed');
+
+      const results = data.results || [];
+      if (!results.length) {
+        noResults.classList.add('visible');
+        return;
+      }
+
+      resultsList.innerHTML = results.map(h => `
+        <div class="result-item" data-id="${escHtml(h.provider_id || '')}">
+          <div>
+            <div class="result-name">${escHtml(h.hospital_name || 'Unknown Hospital')}</div>
+            <div class="result-location">${escHtml(h.city || '')}${h.city && h.state ? ', ' : ''}${escHtml(h.state || '')} &middot; ${escHtml(h.zip_code || '')}</div>
+          </div>
+          <div class="result-stars">${renderStarsText(h.overall_rating)}</div>
+        </div>
+      `).join('');
+
+      resultsList.querySelectorAll('.result-item').forEach(item => {
+        item.addEventListener('click', () => loadHospital(item.dataset.id, item));
+      });
+
+    } catch (err) {
+      showError('Search failed: ' + err.message);
+    } finally {
+      hideSpinner();
+      searchBtn.disabled = false;
+    }
+  }
+
+  async function loadHospital(providerId, itemEl) {
+    if (!providerId) return;
+
+    // Highlight selected
+    resultsList.querySelectorAll('.result-item').forEach(el => el.classList.remove('selected'));
+    if (itemEl) itemEl.classList.add('selected');
+
+    hospitalPanel.classList.remove('visible');
+    showSpinner('Loading hospital data...');
+    hideError();
+
+    try {
+      const res = await fetch(`/api/hospital/${encodeURIComponent(providerId)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load hospital');
+
+      renderHospital(data);
+      hospitalPanel.classList.add('visible');
+      hospitalPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      showError('Failed to load hospital data: ' + err.message);
+    } finally {
+      hideSpinner();
+    }
+  }
+
+  function renderHospital(h) {
+    document.getElementById('panelName').textContent = h.hospital_name || 'Unknown Hospital';
+
+    const metaParts = [];
+    if (h.city) metaParts.push(h.city);
+    if (h.state) metaParts.push(h.state);
+    if (h.zip_code) metaParts.push(h.zip_code);
+    if (h.hospital_type) metaParts.push(h.hospital_type);
+    if (h.phone_number) metaParts.push(h.phone_number);
+    document.getElementById('panelMeta').textContent = metaParts.join(' \u00b7 ');
+
+    const ratingEl = document.getElementById('panelRating');
+    const rating = h.overall_rating;
+    if (rating && rating !== 'Not Available') {
+      ratingEl.innerHTML = `
+        <div class="panel-stars">${renderStarsText(rating)}</div>
+        <div>
+          <div class="panel-rating-label">Overall CMS Star Rating</div>
+          <div class="panel-rating-num">${escHtml(String(rating))} out of 5</div>
+        </div>
+      `;
+    } else {
+      ratingEl.innerHTML = `<div class="panel-rating-label" style="color:var(--text-muted)">No star rating available</div>`;
+    }
+
+    renderSection('mortalityCards', h.mortality, h.mortality_raw);
+    renderSection('readmissionsCards', h.readmissions, h.readmissions_raw);
+    renderSection('experienceCards', h.patient_experience, h.experience_raw);
+  }
+
+  searchBtn.addEventListener('click', doSearch);
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+</script>
+</body>
+</html>
