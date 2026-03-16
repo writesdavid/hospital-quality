@@ -6,9 +6,7 @@
   <title>Hospital Quality — Open Primitive</title>
   <link rel="stylesheet" href="https://openprimitive.com/primitive.css" />
   <style>
-    body { background: #060810; }
-
-    .star-on { color: #ffb84d; }
+    .star-on { color: var(--warn); }
     .star-off { color: var(--border); }
 
     .result-stars { font-size: 1rem; letter-spacing: 1px; flex-shrink: 0; }
@@ -73,8 +71,6 @@
   </style>
 </head>
 <body>
-
-<div class="op-scan"></div>
 
 <div class="op-page">
 
@@ -316,7 +312,7 @@
 
     // Highlight selected
     resultsList.querySelectorAll('.op-list-item').forEach(el => el.style.borderColor = '');
-    if (itemEl) itemEl.style.borderColor = 'var(--signal)';
+    if (itemEl) itemEl.style.borderColor = 'var(--accent)';
 
     hospitalPanel.classList.remove('visible');
     showSpinner('Loading hospital data...');
