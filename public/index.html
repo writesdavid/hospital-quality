@@ -68,6 +68,26 @@
     @media (max-width: 520px) {
       .cards-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── Open the record animations ──────────────────────────────────── */
+    @keyframes section-reveal {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .section-anim { animation: section-reveal 0.4s ease-out both; }
+
+    @keyframes star-fill {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .star-anim { display: inline-block; animation: star-fill 0.2s ease-out both; }
+
+    .open-record-link {
+      font-size: 0.75rem;
+      color: var(--accent);
+      white-space: nowrap;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -199,6 +219,16 @@
     return s;
   }
 
+  function renderStarsAnim(rating) {
+    const n = parseInt(rating, 10);
+    if (!n || n < 1 || n > 5) return '<span style="color:var(--muted)">No rating</span>';
+    let s = '';
+    for (let i = 1; i <= 5; i++) {
+      s += `<span class="${i <= n ? 'star-on' : 'star-off'} star-anim" style="animation-delay:${(i - 1) * 80}ms">\u2605</span>`;
+    }
+    return s;
+  }
+
   function comparisonLabel(c) {
     if (c === 'better') return 'Better than national average';
     if (c === 'worse') return 'Worse than national average';
@@ -296,6 +326,7 @@
             <div style="font-size:0.82rem;color:var(--muted);margin-top:0.1rem;font-family:var(--mono);">${escHtml(h.city || '')}${h.city && h.state ? ', ' : ''}${escHtml(h.state || '')} &middot; ${escHtml(h.zip_code || '')}</div>
           </div>
           <div class="result-stars">${renderStarsText(h.overall_rating)}</div>
+          <span class="open-record-link">Open the record →</span>
         </div>
       `).join('');
 
@@ -352,7 +383,7 @@
     const rating = h.overall_rating;
     if (rating && rating !== 'Not Available') {
       ratingEl.innerHTML = `
-        <div class="panel-stars">${renderStarsText(rating)}</div>
+        <div class="panel-stars">${renderStarsAnim(rating)}</div>
         <div class="panel-rating-meta">
           <span style="font-size:0.85rem;color:var(--dim);">Overall CMS Star Rating</span>
           <span class="panel-rating-sub">${escHtml(String(rating))} out of 5</span>
@@ -365,6 +396,14 @@
     renderSection('mortalityCards', h.mortality, h.mortality_raw);
     renderSection('readmissionsCards', h.readmissions, h.readmissions_raw);
     renderSection('experienceCards', h.patient_experience, h.experience_raw);
+
+    ['mortalitySection', 'readmissionsSection', 'experienceSection'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.classList.remove('section-anim');
+      void el.offsetWidth;
+      el.style.animationDelay = `${i * 150}ms`;
+      el.classList.add('section-anim');
+    });
   }
 
   searchBtn.addEventListener('click', doSearch);
