@@ -1,0 +1,29 @@
+{
+  "opp_version": "0.1.0",
+  "name": "Hospital Quality",
+  "description": "Medicare hospital quality ratings, mortality, readmissions, and patient experience from CMS Care Compare.",
+  "source_url": "https://data.cms.gov",
+  "base_url": "https://hospitals.openprimitive.com",
+  "endpoints": [
+    {
+      "path": "/api/search",
+      "method": "GET",
+      "description": "Search hospitals by name or ZIP code.",
+      "parameters": {
+        "q": "Hospital name or 5-digit ZIP code"
+      }
+    },
+    {
+      "path": "/api/hospital/:providerId",
+      "method": "GET",
+      "description": "Full hospital detail: ratings, mortality, readmissions, patient experience."
+    }
+  ],
+  "confidence": {
+    "completeness": 0.85,
+    "methodology": "mandatory-federal-reporting",
+    "note": "CMS data covers Medicare-participating hospitals. Non-participating facilities excluded."
+  },
+  "license": "US Government Public Domain",
+  "contact": "https://openprimitive.com"
+}
